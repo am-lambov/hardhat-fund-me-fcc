@@ -9,7 +9,6 @@ const INITIAL_PRICE = "2000000000000000000000" // 2000
 export const mocksDeploymentFunction: DeployFunction = async (
     hre: HardhatRuntimeEnvironment,
 ) => {
-    console.log("Deploying FundMe")
     const { getNamedAccounts, deployments } = hre
     const { deploy, log } = deployments
     const { deployer } = await getNamedAccounts()

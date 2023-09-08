@@ -2,6 +2,7 @@ import { network } from "hardhat"
 import { DeployFunction, DeployResult } from "hardhat-deploy/dist/types"
 import { HardhatRuntimeEnvironment } from "hardhat/types"
 import { developmentChains, networkConfig } from "../helper-hardhat-config"
+import { verify } from "../utils/verify"
 
 export const fundMeDeploymentFunction: DeployFunction = async (
     hre: HardhatRuntimeEnvironment,
@@ -26,6 +27,13 @@ export const fundMeDeploymentFunction: DeployFunction = async (
         log: true,
         waitConfirmations: networkConfig[network.name].blockConfirmations || 0,
     })
+
+    if (
+        !developmentChains.includes(network.name) &&
+        process.env.ETHERSCAN_API_KEY
+    ) {
+        await verify(fundMe.address, [ethUsdPriceFeedAddress])
+    }
 }
 
 export default fundMeDeploymentFunction
