@@ -36,7 +36,7 @@ describe("FundMe", function () {
 
     describe("constructor", function () {
         it("Sets the aggregator addresses correctly", async function () {
-            const response = await fundMe.priceFeed()
+            const response = await fundMe.s_priceFeed()
             assert.equal(response, await mockV3Aggregator.getAddress())
         })
     })
@@ -58,7 +58,7 @@ describe("FundMe", function () {
             await fundTransaction.wait(1)
 
             let reportedFundedValue =
-                await fundMe.addressToAmountFunded(funderAddress)
+                await fundMe.s_addressToAmountFunded(funderAddress)
 
             assert.equal(sendValue, reportedFundedValue)
         })
@@ -71,7 +71,7 @@ describe("FundMe", function () {
             })
             await fundTransaction.wait(1)
 
-            const response = await fundMe.funders(0)
+            const response = await fundMe.s_funders(0)
             assert.equal(funderAddress, response)
         })
     })
@@ -128,6 +128,38 @@ describe("FundMe", function () {
             assert.equal(startingTotalBalance, endingTotalBalance)
         })
 
+        it("Testing cheaper withdraw...", async function () {
+            // Arange
+            const startingDeployerBalance = await ethers.provider.getBalance(
+                await owner.getAddress(),
+            )
+
+            const startingContractBallance = await ethers.provider.getBalance(
+                await fundMe.getAddress(),
+            )
+
+            // Act
+            const txResponse = await fundMe.cheaperWithdraw({ from: owner })
+            const txReceipt = await txResponse.wait(1)
+            const gasUsed = txReceipt?.gasUsed!
+            const effectiveGasPrice = txReceipt?.gasPrice!
+            const gasCost = gasUsed * effectiveGasPrice
+
+            // Assert
+            const endingDeployerBalance: bigint =
+                await ethers.provider.getBalance(await owner.getAddress())
+
+            const endingContractBallance: bigint =
+                await ethers.provider.getBalance(await fundMe.getAddress())
+
+            const startingTotalBalance =
+                startingContractBallance + startingDeployerBalance
+            const endingTotalBalance = endingDeployerBalance + gasCost
+
+            assert.equal(endingContractBallance, BigInt(0))
+            assert.equal(startingTotalBalance, endingTotalBalance)
+        })
+
         it("Blocks withdraws from non owner accounts", async function () {
             await expect(
                 fundMe
@@ -143,7 +175,7 @@ describe("FundMe", function () {
             })
             await fundMe.withdraw({ from: await deployer.getAddress() })
 
-            await expect(fundMe.funders(0)).to.be.reverted
+            await expect(fundMe.s_funders(0)).to.be.reverted
         })
 
         it("Resets the addressToAmountFunded mapping to 0", async function () {
@@ -153,7 +185,7 @@ describe("FundMe", function () {
             })
             await fundMe.withdraw({ from: await deployer.getAddress() })
 
-            const secondFunderAmount = await fundMe.addressToAmountFunded(
+            const secondFunderAmount = await fundMe.s_addressToAmountFunded(
                 await secondFunder.getAddress(),
             )
             assert.equal(secondFunderAmount, BigInt(0))
@@ -196,7 +228,7 @@ describe("FundMe", function () {
     })
 
     describe("getVersion", function () {
-        it("returns the same version as the v3Aggregator price feed version", async function () {
+        it("Returns the same version as the v3Aggregator price feed version", async function () {
             const fundMePricefeedVersion = await fundMe.getVersion()
             const mockV3AggregatorVersion = await mockV3Aggregator.version()
 
