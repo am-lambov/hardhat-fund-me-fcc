@@ -11,3 +11,7 @@ REPORT_GAS=true npx hardhat test
 npx hardhat node
 npx hardhat run scripts/deploy.ts
 ```
+
+### Credits:
+
+This project was created while following Patrick Collins' instructions in the [Learn Blockchain, Solidity, and Full Stack Web3 Development with JavaScript FreeCodeCamp course!](https://www.youtube.com/watch?v=gyMwXuJrbJQ)
